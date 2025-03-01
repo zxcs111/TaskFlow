@@ -1,94 +1,192 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TaskFlow - Task Management</title>
+    <title>TaskMaster Pro</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
-<body>
-    <div class="container">
-        <div class="content">
-            <!-- Sidebar -->
-            <aside class="sidebar" aria-label="Task filters">
-                <div class="filter-section">
-                    <h2>Status</h2>
-                    <button class="filter-btn active" data-status="all" aria-pressed="true">
-                        <span>All Tasks</span>
-                    </button>
-                    <button class="filter-btn" data-status="in-progress" aria-pressed="false">
-                        <span>In Progress</span>
-                    </button>
-                    <button class="filter-btn" data-status="completed" aria-pressed="false">
-                        <span>Completed</span>
-                    </button>
+<body class="bg-body">
+    <div class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-xl-7">
+                <!-- Header Section -->
+                <div class="header-section mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <h1 class="display-5 mb-0">
+                                <i class="fas fa-check-circle text-primary me-2"></i>TaskMaster Pro
+                            </h1>
+                            <p class="text-muted">Transform your tasks into achievements</p>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-ring" id="completion-ring">
+                                <div class="progress-ring-circle">
+                                    <span id="completion-percentage">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="filter-section">
-                    <h2>Categories</h2>
-                    <button class="filter-btn active" data-category="all" aria-pressed="true">
-                        <span>All Categories</span>
-                    </button>
-                    <button class="filter-btn" data-category="work" aria-pressed="false">
-                        <span>Work</span>
-                    </button>
-                    <button class="filter-btn" data-category="personal" aria-pressed="false">
-                        <span>Personal</span>
-                    </button>
-                    <button class="filter-btn" data-category="health" aria-pressed="false">
-                        <span>Health</span>
-                    </button>
-                    <button class="filter-btn" data-category="learning" aria-pressed="false">
-                        <span>Learning</span>
-                    </button>
+                <!-- Quick Actions Bar -->
+                <div class="quick-actions mb-4">
+                    <div class="row g-3">
+                        <div class="col-sm-4">
+                            <div class="stat-card primary-card">
+                                <i class="fas fa-tasks"></i>
+                                <span id="total-tasks">0</span>
+                                <p>Total Tasks</p>
+                                <div class="card-glow"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card success-card">
+                                <i class="fas fa-check-circle"></i>
+                                <span id="completed-tasks">0</span>
+                                <p>Completed</p>
+                                <div class="card-glow"></div>
+                            </div>
+                        </div>
+                        <div class="col-sm-4">
+                            <div class="stat-card warning-card">
+                                <i class="fas fa-hourglass-half"></i>
+                                <span id="pending-tasks">0</span>
+                                <p>Pending</p>
+                                <div class="card-glow"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </aside>
 
-            <!-- Main Content -->
-            <div class="main-content">
-                <div class="card">
-                    <h1 class="page-title">TaskFlow</h1>
-                    <form id="task-form" class="add-task-form">
-                        <div class="input-group">
-                            <svg class="clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <polyline points="12 6 12 12 16 14"></polyline>
-                            </svg>
-                            <input 
-                                type="text" 
-                                id="task-input" 
-                                placeholder="What needs to be done?" 
-                                required
-                                aria-label="Task description"
-                            >
-                            <select id="category-select" aria-label="Task category">
-                                <option value="work">Work</option>
-                                <option value="personal">Personal</option>
-                                <option value="health">Health</option>
-                                <option value="learning">Learning</option>
-                            </select>
-                            <select id="priority-select" aria-label="Task priority">
-                                <option value="high">High Priority</option>
-                                <option value="medium">Medium Priority</option>
-                                <option value="low">Low Priority</option>
-                            </select>
-                            <button type="submit" aria-label="Add new task">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                                </svg>
-                                Add Task
+                <!-- Add Task Section -->
+                <div class="add-task-section mb-4">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-body p-4">
+                            <form id="todo-form" class="task-form">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="input-group input-group-lg">
+                                            <span class="input-group-text bg-transparent border-0">
+                                                <i class="fas fa-plus-circle text-primary"></i>
+                                            </span>
+                                            <input type="text" id="todo-input" class="form-control form-control-lg border-0" 
+                                                   placeholder="What's your next achievement?" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <div class="flex-grow-1">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-transparent">
+                                                        <i class="fas fa-flag"></i>
+                                                    </span>
+                                                    <select id="priority-select" class="form-select">
+                                                        <option value="high">High Priority</option>
+                                                        <option value="medium" selected>Medium Priority</option>
+                                                        <option value="low">Low Priority</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="input-group">
+                                                    <span class="input-group-text bg-transparent">
+                                                        <i class="fas fa-calendar"></i>
+                                                    </span>
+                                                    <input type="datetime-local" id="due-date-input" 
+                                                           class="form-control" 
+                                                           title="Set due date">
+                                                </div>
+                                            </div>
+                                            <button type="submit" class="btn btn-primary btn-lg px-4">
+                                                <i class="fas fa-plus me-2"></i>Add Task
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tasks List Section -->
+                <div class="tasks-container">
+                    <div class="tasks-header d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="h5 mb-0">Your Tasks</h2>
+                        <div class="btn-group">
+                            <button class="btn btn-outline-primary btn-sm active" data-filter="all">
+                                <i class="fas fa-list-ul me-1"></i>All
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" data-filter="active">
+                                <i class="fas fa-clock me-1"></i>Active
+                            </button>
+                            <button class="btn btn-outline-primary btn-sm" data-filter="completed">
+                                <i class="fas fa-check-double me-1"></i>Completed
                             </button>
                         </div>
-                    </form>
+                    </div>
 
-                    <div id="tasks-container" aria-label="Task list">
-                        <!-- Tasks will be added here dynamically -->
+                    <!-- Task List -->
+                    <div class="task-list">
+                        <div id="todo-list" class="list-group tasks-list"></div>
+
+                        <!-- Empty State -->
+                        <div id="empty-state" class="text-center py-5 d-none">
+                            <div class="empty-state-icon mb-4">
+                                <i class="fas fa-clipboard-list fa-3x text-primary"></i>
+                            </div>
+                            <h3 class="h5 mb-3">Ready to Get Started?</h3>
+                            <p class="text-muted mb-4">Add your first task and begin your journey to productivity!</p>
+                            <button class="btn btn-primary btn-lg" onclick="document.getElementById('todo-input').focus()">
+                                <i class="fas fa-plus-circle me-2"></i>Add Your First Task
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Edit Task Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title">
+                        <i class="fas fa-edit text-primary me-2"></i>Edit Task
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="text" id="edit-input" class="form-control form-control-lg" 
+                               placeholder="Update your task">
+                    </div>
+                    <div class="mb-3">
+                        <select id="edit-priority-select" class="form-select">
+                            <option value="high">High Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="low">Low Priority</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-due-date" class="form-label">Due Date</label>
+                        <input type="datetime-local" id="edit-due-date" class="form-control">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary px-4" id="save-edit">
+                        <i class="fas fa-check me-2"></i>Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="assets/js/main.js"></script>
 </body>
 </html>

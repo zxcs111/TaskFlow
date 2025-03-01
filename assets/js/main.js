@@ -1,181 +1,275 @@
-// Task management functionality
-class TaskManager {
+class TodoList {
     constructor() {
-        this.tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-        this.form = document.getElementById('task-form');
-        this.input = document.getElementById('task-input');
-        this.categorySelect = document.getElementById('category-select');
+        this.todos = JSON.parse(localStorage.getItem('todos')) || [];
+        this.currentId = parseInt(localStorage.getItem('currentId')) || 1;
+        this.editingId = null;
+        this.currentFilter = 'all';
+
+        // DOM Elements
+        this.form = document.getElementById('todo-form');
+        this.input = document.getElementById('todo-input');
+        this.list = document.getElementById('todo-list');
+        this.emptyState = document.getElementById('empty-state');
+        this.editModal = new bootstrap.Modal(document.getElementById('editModal'));
+        this.editInput = document.getElementById('edit-input');
+        this.saveEditBtn = document.getElementById('save-edit');
         this.prioritySelect = document.getElementById('priority-select');
-        this.container = document.getElementById('tasks-container');
-        this.statusFilters = document.querySelectorAll('[data-status]');
-        this.categoryFilters = document.querySelectorAll('[data-category]');
+        this.editPrioritySelect = document.getElementById('edit-priority-select');
+        this.dueDateInput = document.getElementById('due-date-input');
+        this.editDueDateInput = document.getElementById('edit-due-date');
 
-        this.currentStatusFilter = 'all';
-        this.currentCategoryFilter = 'all';
+        // Stats Elements
+        this.totalTasksEl = document.getElementById('total-tasks');
+        this.completedTasksEl = document.getElementById('completed-tasks');
+        this.pendingTasksEl = document.getElementById('pending-tasks');
+        this.completionPercentageEl = document.getElementById('completion-percentage');
 
-        this.setupEventListeners();
-        this.renderTasks();
+        this.initialize();
     }
 
-    setupEventListeners() {
-        this.form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            this.addTask();
-        });
+    initialize() {
+        // Event Listeners
+        this.form.addEventListener('submit', (e) => this.addTodo(e));
+        this.saveEditBtn.addEventListener('click', () => this.saveEdit());
 
-        this.statusFilters.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setStatusFilter(btn.dataset.status);
+        // Filter buttons
+        document.querySelectorAll('[data-filter]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                this.currentFilter = e.target.dataset.filter;
+                this.renderTodos();
             });
         });
 
-        this.categoryFilters.forEach(btn => {
-            btn.addEventListener('click', () => {
-                this.setCategoryFilter(btn.dataset.category);
-            });
-        });
+        // Initial render
+        this.renderTodos();
     }
 
-    setStatusFilter(status) {
-        this.currentStatusFilter = status;
-        this.updateFilterButtons();
-        this.renderTasks();
+    updateStats() {
+        const total = this.todos.length;
+        const completed = this.todos.filter(todo => todo.completed).length;
+        const pending = total - completed;
+        const percentage = total === 0 ? 0 : Math.round((completed / total) * 100);
+
+        this.totalTasksEl.textContent = total;
+        this.completedTasksEl.textContent = completed;
+        this.pendingTasksEl.textContent = pending;
+        this.completionPercentageEl.textContent = `${percentage}%`;
+
+        // Update progress ring
+        const ring = document.querySelector('.progress-ring-circle');
+        ring.style.setProperty('--progress', `${percentage * 3.6}deg`);
+
+        // Toggle empty state
+        this.emptyState.classList.toggle('d-none', total > 0);
     }
 
-    setCategoryFilter(category) {
-        this.currentCategoryFilter = category;
-        this.updateFilterButtons();
-        this.renderTasks();
+    saveTodos() {
+        localStorage.setItem('todos', JSON.stringify(this.todos));
+        localStorage.setItem('currentId', this.currentId.toString());
+        this.updateStats();
     }
 
-    updateFilterButtons() {
-        this.statusFilters.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.status === this.currentStatusFilter);
-        });
-        this.categoryFilters.forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.category === this.currentCategoryFilter);
-        });
-    }
+    addTodo(e) {
+        e.preventDefault();
+        const text = this.input.value.trim();
+        const priority = this.prioritySelect.value;
+        const dueDate = this.dueDateInput.value ? new Date(this.dueDateInput.value) : null;
 
-    addTask() {
-        const title = this.input.value.trim();
-        if (!title) return;
+        if (!text) {
+            this.input.classList.add('shake');
+            setTimeout(() => this.input.classList.remove('shake'), 500);
+            return;
+        }
 
-        const task = {
-            id: Date.now(),
-            title,
+        const todo = {
+            id: this.currentId++,
+            text,
+            priority,
             completed: false,
-            category: this.categorySelect.value,
-            priority: this.prioritySelect.value,
-            dueDate: new Date().toISOString(),
-            createdAt: new Date().toISOString()
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            dueDate
         };
 
-        this.tasks.push(task);
-        this.saveTasks();
-        this.renderTasks();
+        this.todos.unshift(todo);
+        this.saveTodos();
+        this.renderTodos();
+
+        // Clear input with animation
         this.input.value = '';
-    }
+        this.prioritySelect.value = 'medium';
+        this.dueDateInput.value = '';
+        this.input.classList.add('fade-out');
+        setTimeout(() => this.input.classList.remove('fade-out'), 300);
 
-    toggleTask(id) {
-        const task = this.tasks.find(t => t.id === id);
-        if (task) {
-            task.completed = !task.completed;
-            this.saveTasks();
-            this.renderTasks();
+        // Show success feedback
+        const newItem = document.querySelector('.todo-item');
+        if (newItem) {
+            newItem.classList.add('highlight');
+            setTimeout(() => newItem.classList.remove('highlight'), 1000);
         }
     }
 
-    editTask(id) {
-        const task = this.tasks.find(t => t.id === id);
-        if (!task) return;
-
-        const newTitle = prompt('Edit task:', task.title);
-        if (newTitle && newTitle.trim()) {
-            task.title = newTitle.trim();
-            this.saveTasks();
-            this.renderTasks();
+    toggleTodo(id) {
+        const todo = this.todos.find(t => t.id === id);
+        if (todo) {
+            todo.completed = !todo.completed;
+            todo.updatedAt = new Date();
+            this.saveTodos();
+            this.renderTodos();
         }
     }
 
-    deleteTask(id) {
-        this.tasks = this.tasks.filter(t => t.id !== id);
-        this.saveTasks();
-        this.renderTasks();
+    deleteTodo(id) {
+        const todoEl = document.querySelector(`[data-id="${id}"]`);
+        if (todoEl) {
+            todoEl.classList.add('fade-out');
+            setTimeout(() => {
+                this.todos = this.todos.filter(todo => todo.id !== id);
+                this.saveTodos();
+                this.renderTodos();
+            }, 300);
+        }
     }
 
-    saveTasks() {
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+    editTodo(id) {
+        const todo = this.todos.find(t => t.id === id);
+        if (todo) {
+            this.editingId = id;
+            this.editInput.value = todo.text;
+            this.editPrioritySelect.value = todo.priority || 'medium';
+            if (todo.dueDate) {
+                const dueDate = new Date(todo.dueDate);
+                this.editDueDateInput.value = dueDate.toISOString().slice(0, 16);
+            } else {
+                this.editDueDateInput.value = '';
+            }
+            this.editModal.show();
+            setTimeout(() => this.editInput.focus(), 400);
+        }
     }
 
-    filterTasks() {
-        return this.tasks.filter(task => {
-            const matchesStatus =
-                this.currentStatusFilter === 'all' ? true :
-                    this.currentStatusFilter === 'completed' ? task.completed :
-                        !task.completed;
+    saveEdit() {
+        const text = this.editInput.value.trim();
+        const priority = this.editPrioritySelect.value;
+        const dueDate = this.editDueDateInput.value ? new Date(this.editDueDateInput.value) : null;
 
-            const matchesCategory =
-                this.currentCategoryFilter === 'all' ? true :
-                    task.category === this.currentCategoryFilter;
+        if (!text) return;
 
-            return matchesStatus && matchesCategory;
+        const todo = this.todos.find(t => t.id === this.editingId);
+        if (todo) {
+            todo.text = text;
+            todo.priority = priority;
+            todo.dueDate = dueDate;
+            todo.updatedAt = new Date();
+            this.saveTodos();
+            this.renderTodos();
+        }
+
+        this.editModal.hide();
+    }
+
+    getDueDateStatus(dueDate) {
+        if (!dueDate) return '';
+
+        const now = new Date();
+        const due = new Date(dueDate);
+        const diffHours = (due - now) / (1000 * 60 * 60);
+
+        if (diffHours < 0) {
+            return '<span class="badge bg-danger">Overdue</span>';
+        } else if (diffHours < 24) {
+            return '<span class="badge bg-warning">Due Today</span>';
+        } else if (diffHours < 48) {
+            return '<span class="badge bg-info">Due Tomorrow</span>';
+        }
+        return `<span class="badge bg-secondary">Due ${due.toLocaleDateString()}</span>`;
+    }
+
+    filterTodos() {
+        return this.todos.filter(todo => {
+            switch (this.currentFilter) {
+                case 'active': return !todo.completed;
+                case 'completed': return todo.completed;
+                default: return true;
+            }
+        }).sort((a, b) => {
+            // Sort by priority first
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            const priorityDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+
+            if (priorityDiff !== 0) return priorityDiff;
+
+            // Then sort by due date if both have due dates
+            if (a.dueDate && b.dueDate) {
+                return new Date(a.dueDate) - new Date(b.dueDate);
+            }
+            // Put tasks with due dates before those without
+            if (a.dueDate) return -1;
+            if (b.dueDate) return 1;
+            return 0;
         });
     }
 
-    formatDate(dateString) {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
+    getPriorityBadge(priority) {
+        const badges = {
+            high: '<span class="badge bg-danger">High</span>',
+            medium: '<span class="badge bg-warning">Medium</span>',
+            low: '<span class="badge bg-info">Low</span>'
+        };
+        return badges[priority] || badges.medium;
     }
 
-    renderTask(task) {
-        const taskElement = document.createElement('div');
-        taskElement.className = `task ${task.completed ? 'completed' : ''}`;
-        taskElement.innerHTML = `
-            <button class="task-checkbox ${task.completed ? 'checked' : ''}" onclick="taskManager.toggleTask(${task.id})">
-                ${task.completed ? `
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                ` : ''}
-            </button>
-            <div class="task-content">
-                <div class="task-title">${task.title}</div>
-                <div class="task-meta">
-                    <span class="tag category-${task.category.toLowerCase()}">${task.category}</span>
-                    <span class="tag priority-${task.priority}">${task.priority}</span>
-                    <span class="task-date">${this.formatDate(task.dueDate)}</span>
+    createTodoElement(todo) {
+        const li = document.createElement('div');
+        li.className = `todo-item d-flex align-items-center p-3 ${todo.completed ? 'completed' : ''} fade-in priority-${todo.priority || 'medium'}`;
+        li.dataset.id = todo.id;
+
+        li.innerHTML = `
+            <div class="todo-checkbox">
+                <input type="checkbox" class="form-check-input" ${todo.completed ? 'checked' : ''}>
+            </div>
+            <div class="todo-content">
+                <span class="todo-text">${todo.text}</span>
+                <div class="todo-meta">
+                    ${this.getPriorityBadge(todo.priority || 'medium')}
+                    ${todo.dueDate ? this.getDueDateStatus(todo.dueDate) : ''}
                 </div>
             </div>
-            <div class="task-actions">
-                <button class="action-btn edit" onclick="taskManager.editTask(${task.id})" title="Edit task">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
+            <div class="todo-actions">
+                <button class="btn btn-sm btn-outline-primary action-btn edit-btn" title="Edit">
+                    <i class="fas fa-edit"></i>
                 </button>
-                <button class="action-btn delete" onclick="taskManager.deleteTask(${task.id})" title="Delete task">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M3 6h18"></path>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                    </svg>
+                <button class="btn btn-sm btn-outline-danger action-btn delete-btn" title="Delete">
+                    <i class="fas fa-trash"></i>
                 </button>
             </div>
         `;
-        this.container.appendChild(taskElement);
+
+        // Event Listeners
+        li.querySelector('input[type="checkbox"]').addEventListener('change', 
+            () => this.toggleTodo(todo.id));
+        li.querySelector('.edit-btn').addEventListener('click', 
+            () => this.editTodo(todo.id));
+        li.querySelector('.delete-btn').addEventListener('click', 
+            () => this.deleteTodo(todo.id));
+
+        return li;
     }
 
-    renderTasks() {
-        this.container.innerHTML = '';
-        const filteredTasks = this.filterTasks();
-        filteredTasks.forEach(task => this.renderTask(task));
+    renderTodos() {
+        this.list.innerHTML = '';
+        const filteredTodos = this.filterTodos();
+        filteredTodos.forEach(todo => {
+            this.list.appendChild(this.createTodoElement(todo));
+        });
+        this.updateStats();
     }
 }
 
-// Initialize the task manager
-const taskManager = new TaskManager();
+// Initialize the app
+document.addEventListener('DOMContentLoaded', () => {
+    new TodoList();
+});
