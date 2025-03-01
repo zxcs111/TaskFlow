@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Task Management</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <!-- Sidebar -->
+            <aside class="sidebar" aria-label="Task filters">
+                <div class="filter-section">
+                    <h2>Status</h2>
+                    <button class="filter-btn active" data-status="all" aria-pressed="true">
+                        <span>All Tasks</span>
+                    </button>
+                    <button class="filter-btn" data-status="in-progress" aria-pressed="false">
+                        <span>In Progress</span>
+                    </button>
+                    <button class="filter-btn" data-status="completed" aria-pressed="false">
+                        <span>Completed</span>
+                    </button>
+                </div>
+
+                <div class="filter-section">
+                    <h2>Categories</h2>
+                    <button class="filter-btn active" data-category="all" aria-pressed="true">
+                        <span>All Categories</span>
+                    </button>
+                    <button class="filter-btn" data-category="work" aria-pressed="false">
+                        <span>Work</span>
+                    </button>
+                    <button class="filter-btn" data-category="personal" aria-pressed="false">
+                        <span>Personal</span>
+                    </button>
+                    <button class="filter-btn" data-category="health" aria-pressed="false">
+                        <span>Health</span>
+                    </button>
+                    <button class="filter-btn" data-category="learning" aria-pressed="false">
+                        <span>Learning</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                <div class="card">
+                    <h1 class="page-title">TaskFlow</h1>
+                    <form id="task-form" class="add-task-form">
+                        <div class="input-group">
+                            <svg class="clock-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            <input 
+                                type="text" 
+                                id="task-input" 
+                                placeholder="What needs to be done?" 
+                                required
+                                aria-label="Task description"
+                            >
+                            <select id="category-select" aria-label="Task category">
+                                <option value="work">Work</option>
+                                <option value="personal">Personal</option>
+                                <option value="health">Health</option>
+                                <option value="learning">Learning</option>
+                            </select>
+                            <select id="priority-select" aria-label="Task priority">
+                                <option value="high">High Priority</option>
+                                <option value="medium">Medium Priority</option>
+                                <option value="low">Low Priority</option>
+                            </select>
+                            <button type="submit" aria-label="Add new task">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                Add Task
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="tasks-container" aria-label="Task list">
+                        <!-- Tasks will be added here dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>
